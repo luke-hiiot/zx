@@ -3,6 +3,89 @@ const std = @import("std");
 
 pub const Ast = @import("zx/Ast.zig");
 pub const Allocator = std.mem.Allocator;
+pub const RouteParams = std.StringArrayHashMap([]const u8);
+
+/// Hook-like helpers for accessing optional route params inside ZX pages.
+pub const ParamsHook = struct {
+    params: ?RouteParams,
+
+    pub fn init(params: ?RouteParams) ParamsHook {
+        return .{ .params = params };
+    }
+
+    /// Return a parameter value or `fallback` if it's missing.
+    pub fn get(self: ParamsHook, key: []const u8, fallback: []const u8) []const u8 {
+        if (self.params) |map| {
+            return map.get(key) orelse fallback;
+        }
+        return fallback;
+    }
+
+    /// Return the optional parameter value.
+    pub fn getOptional(self: ParamsHook, key: []const u8) ?[]const u8 {
+        if (self.params) |map| {
+            return map.get(key);
+        }
+        return null;
+    }
+
+    /// Require the presence of the parameter or error.
+    pub fn expect(self: ParamsHook, key: []const u8) ![]const u8 {
+        if (self.params) |map| {
+            if (map.get(key)) |value| {
+                return value;
+            }
+        }
+        return error.MissingParam;
+    }
+};
+
+pub const PageContext = struct {
+    allocator: Allocator,
+    params: ParamsHook,
+
+    pub fn init(allocator: Allocator, params: ?RouteParams) PageContext {
+        return .{
+            .allocator = allocator,
+            .params = ParamsHook.init(params),
+        };
+    }
+};
+
+pub fn createPageContext(allocator: Allocator, params: ?RouteParams) PageContext {
+    return PageContext.init(allocator, params);
+}
+
+threadlocal var active_page_context: ?*const PageContext = null;
+
+pub fn setActivePageContext(ctx: *const PageContext) void {
+    active_page_context = ctx;
+}
+
+pub fn clearActivePageContext() void {
+    active_page_context = null;
+}
+
+pub fn usePageContext() PageContext {
+    const ctx = active_page_context orelse @panic("usePageContext called outside of a page render");
+    return ctx.*;
+}
+
+pub fn usePageParams() ParamsHook {
+    return usePageContext().params;
+}
+
+pub fn usePageAllocator() Allocator {
+    return usePageContext().allocator;
+}
+
+pub fn useParams(params: ?RouteParams) ParamsHook {
+    return ParamsHook.init(params);
+}
+
+pub fn useParam(params: ?RouteParams, key: []const u8, fallback: []const u8) []const u8 {
+    return useParams(params).get(key, fallback);
+}
 
 const ElementTag = enum { polyline, iframe, slot, svg, path, img, html, base, head, link, meta, script, style, title, address, article, body, h1, h6, footer, header, h2, h3, h4, h5, hgroup, nav, section, dd, dl, dt, div, figcaption, figure, hr, li, ol, ul, menu, main, p, pre, a, abbr, b, bdi, bdo, br, cite, code, data, time, dfn, em, i, kbd, mark, q, blockquote, rp, ruby, rt, rtc, rb, s, del, ins, samp, small, span, strong, sub, sup, u, @"var", wbr, area, map, audio, source, track, video, embed, object, param, canvas, noscript, caption, table, col, colgroup, tbody, tr, thead, tfoot, td, th, button, datalist, option, fieldset, label, form, input, keygen, legend, meter, optgroup, select, output, progress, textarea, details, dialog, menuitem, summary, content, element, shadow, template, acronym, applet, basefont, font, big, blink, center, command, dir, frame, frameset, isindex, listing, marquee, noembed, plaintext, spacer, strike, tt, xmp };
 const SELF_CLOSING_ONLY: []const ElementTag = &.{ .br, .hr, .img, .input, .link, .source, .track, .wbr };
