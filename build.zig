@@ -74,13 +74,13 @@ pub fn setup(b: *std.Build, options: std.Build.ExecutableOptions) void {
     const zx_exe = zx_dep.artifact("zx");
 
     // --- 2. Define the transpilation run command ---
-    // This command generates the missing files in 'site/.zx'
+    // This command generates the missing files in 'app/.zx'
     const transpile_cmd = b.addRunArtifact(zx_exe);
     transpile_cmd.addArgs(&[_][:0]const u8{
         "transpile",
-        "site",
+        "app",
         "--output",
-        "site/.zx",
+        "app/.zx",
     });
     // Ensure the build fails if transpilation fails
     // transpile_cmd.expect_exit_code = 0;
