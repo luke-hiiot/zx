@@ -1,10 +1,10 @@
-# Zig 编译输出
+# Zig build output
 zig-cache/
 zig-out/
 .zig-cache/
 .zig-out/
 
-# Node.js 相关
+# Node.js related
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -13,27 +13,27 @@ node_modules/
 dist/
 build/
 
-# 临时构建文件
+# Temporary build files
 .DS_Store
 Thumbs.db
 
-# 编辑器文件
+# Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# 日志文件
+# Log files
 *.log
 
-# 环境变量文件
+# Environment variable files
 .env
 
-# Docker 相关
+# Docker related
 .dockerignore
 !Dockerfile
 
-# 操作系统文件
+# Operating system files
 .DS_Store
 .DS_Store?
 ._*
