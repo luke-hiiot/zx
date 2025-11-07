@@ -5,7 +5,7 @@
     .minimum_zig_version = "0.15.2",
     .dependencies = .{
         .httpz = .{
-            .path = "./libs/http.zig",
+            .path = "../http.zig",
         },
     },
     .paths = .{
